@@ -9,6 +9,7 @@ from .localization import localize_target, refine_target_box
 from .runfiles import settings
 from .utils import TensorList, plot_graph
 
+
 class PrDiMPTracker:
     def __init__(self, seq, image_sz, net_path, is_color=True):
         self.is_color_image = is_color
@@ -41,7 +42,7 @@ class PrDiMPTracker:
         out = {'time': time.time() - tic}
         return out
 
-    def track(self, image, info: dict = None) -> dict:
+    def track(self, image, info: dict=None) -> dict:
         self.debug_info = {}
 
         self.frame_num += 1
@@ -109,7 +110,7 @@ class PrDiMPTracker:
         self.debug_info['max_score'] = max_score
 
         # Compute output bounding box
-        new_state = torch.cat((self.pos[[1,0]] - (self.target_sz[[1,0]]-1)/2, self.target_sz[[1,0]]))
+        new_state = torch.cat((self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2, self.target_sz[[1,0]]))
 
         if getattr(settings, 'output_not_found_box', False) and flag == 'not_found':
             output_state = [-1, -1, -1, -1]
@@ -117,7 +118,7 @@ class PrDiMPTracker:
             output_state = new_state.tolist()
 
         out = {'target_bbox': output_state}
-        return out
+        return out, [new_state.tolist(), score_map.cpu().data.numpy(), test_x, scale_ind, sample_pos, sample_scales, flag, s]
 
     def get_centered_sample_pos(self):
         return self.pos + ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \

@@ -2,6 +2,7 @@ from .get_sequence_info import get_sequence_info
 from .load_video_info import load_video_info, load_video_info_test
 from .tensorlist import TensorList
 from .plotting import *
+from .tracking import *
 
 def _round(x):
     res = x.copy()

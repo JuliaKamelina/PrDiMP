@@ -21,7 +21,7 @@ def demo_tracker(video_path, net_path, no_show):
         if i == 0:
             output = tracker.initialize(frame)
         else:
-            output = tracker.track(frame)
+            output, _ = tracker.track(frame)
         bbox = output.get('target_bbox', seq["init_rect"])
         bbox = (bbox[0], bbox[1],
                 bbox[0] + bbox[2],
