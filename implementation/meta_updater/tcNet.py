@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.contrib import rnn
-from tcopt import tcopts
+from .tcopt import tcopts
 
 
 class tclstm:

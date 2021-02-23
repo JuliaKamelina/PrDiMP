@@ -3,9 +3,9 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.contrib import rnn
-from tcNet import tclstm
+from .tcNet import tclstm
 import os
-from tcopt import tcopts
+from .tcopt import tcopts
 import tensorflow.contrib.slim as slim
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
