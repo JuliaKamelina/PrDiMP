@@ -17,21 +17,26 @@ from .metric_model import me_extract_regions, ft_net
 
 
 class PrDiMPMUTracker(PrDiMPTracker):
-    def __init__(self, image, seq, image_sz, net_path, is_color=True, mu_model_dir=None, 
+    def __init__(self, image_sz, net_path, is_color=True, mu_model_dir=None, 
                  mu_model_checkpoint=None, metric_model_path='metric_model/model/metric_model.pt'):
-        super().__init__(seq, image_sz, net_path, is_color)
+        super().__init__(image_sz, net_path, is_color)
         self.mu_model_checkpoint = mu_model_checkpoint
         self.i = 0
         tfconfig = tf.ConfigProto()
         tfconfig.gpu_options.per_process_gpu_memory_fraction = 0.3
         self.sess = tf.Session(config=tfconfig)
+        self.mu_model_dir = mu_model_dir
+        self.metric_model_path = metric_model_path
 
+        # init_gt = [*(self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2), *self.target_sz[[1,0]]]
+        # self.last_gt = [init_gt[1], init_gt[0], init_gt[1] + init_gt[3], init_gt[0] + init_gt[2]]  # ymin xmin ymax xmax
+
+    def initializing(self, image, seq, reuse=False):
+        out = self.initialize(image, seq)
         init_gt = [*(self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2), *self.target_sz[[1,0]]]
         self.last_gt = [init_gt[1], init_gt[0], init_gt[1] + init_gt[3], init_gt[0] + init_gt[2]]  # ymin xmin ymax xmax
-
-        self.initialize(image)
-        self.tc_init(mu_model_dir)
-        self.metric_init(image, np.array(init_gt), metric_model_path)
+        self.tc_init(self.mu_model_dir, reuse)
+        self.metric_init(image, np.array(init_gt), self.metric_model_path)
         self.dis_record = []
         self.state_record = []
         self.rv_record = []
@@ -42,14 +47,16 @@ class PrDiMPMUTracker(PrDiMPTracker):
             [(self.last_gt[0] + self.last_gt[2] - 1) / 2, (self.last_gt[1] + self.last_gt[3] - 1) / 2])
         self.target_sz = torch.FloatTensor(
             [(self.last_gt[2] - self.last_gt[0]), (self.last_gt[3] - self.last_gt[1])])
+        
+        return out
 
-    def tc_init(self, model_dir):
+    def tc_init(self, model_dir, reuse=False):
         self.tc_model = tclstm()
         self.X_input = tf.placeholder("float", [None, tcopts['time_steps'], tcopts['lstm_num_input']])
         self.maps = tf.placeholder("float", [None, 19, 19, 1])
-        self.map_logits = self.tc_model.map_net(self.maps)
+        self.map_logits = self.tc_model.map_net(self.maps, reuse=reuse)
         self.Inputs = tf.concat((self.X_input, self.map_logits), axis=2)
-        self.logits, _ = self.tc_model.net(self.Inputs)
+        self.logits, _ = self.tc_model.net(self.Inputs, reuse=reuse)
 
         variables_to_restore = [var for var in tf.global_variables() if
                                 (var.name.startswith('tclstm') or var.name.startswith('mapnet'))]

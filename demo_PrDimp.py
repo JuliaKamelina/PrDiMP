@@ -16,10 +16,10 @@ def demo_tracker(video_path, net_path, no_show):
     seq = get_sequence_info(seq)
     frames = [np.array(Image.open(f)) for f in seq["image_files"]]
     is_color = True if (len(frames[0].shape) == 3) else False
-    tracker = PrDiMPTracker(seq, frames[0].shape[:2], net_path, is_color)
+    tracker = PrDiMPTracker(frames[0].shape[:2], net_path, is_color)
     for i, frame in enumerate(frames):
         if i == 0:
-            output = tracker.initialize(frame)
+            output = tracker.initialize(frame, seq)
         else:
             output, _ = tracker.track(frame)
         bbox = output.get('target_bbox', seq["init_rect"])
