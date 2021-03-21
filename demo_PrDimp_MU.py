@@ -8,7 +8,7 @@ from PIL import Image
 sys.path.append('./')
 sys.path.append('./implementation/pytracking')
 
-from implementation import PrDiMPTracker
+from implementation import PrDiMPMUTracker
 from implementation.utils import load_video_info, get_sequence_info
 
 def demo_tracker(video_path, net_path, no_show):
@@ -16,12 +16,12 @@ def demo_tracker(video_path, net_path, no_show):
     seq = get_sequence_info(seq)
     frames = [np.array(Image.open(f)) for f in seq["image_files"]]
     is_color = True if (len(frames[0].shape) == 3) else False
-    tracker = PrDiMPTracker(frames[0].shape[:2], net_path, is_color)
+    tracker = PrDiMPMUTracker(frames[0].shape[:2], net_path, is_color, mu_model_dir='prdimp_mu_1/')
     for i, frame in enumerate(frames):
         if i == 0:
-            output = tracker.initialize(frame, seq)
+            output = tracker.initializing(frame, seq, reuse=False)
         else:
-            output, _ = tracker.track(frame)
+            output, _ = tracker.tracking(frame)
         bbox = output.get('target_bbox', seq["init_rect"])
         bbox = (bbox[0], bbox[1],
                 bbox[0] + bbox[2],

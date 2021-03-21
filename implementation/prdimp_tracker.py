@@ -9,11 +9,12 @@ from .localization import localize_target, refine_target_box
 from .runfiles import settings
 from .utils import TensorList, plot_graph
 
+
 class PrDiMPTracker:
-    def __init__(self, seq, image_sz, net_path, is_color=True):
+    def __init__(self, image_sz, net_path, is_color=True):
         self.is_color_image = is_color
-        self.pos = torch.Tensor(seq["init_pos"])
-        self.target_sz = torch.Tensor(seq["init_sz"])
+        # self.pos = torch.Tensor(seq["init_pos"])
+        # self.target_sz = torch.Tensor(seq["init_sz"])
         self.frame_num = 1
         self.features = PrDiMPFeatures(is_color, net_path, settings.device)
         # im = torch.from_numpy(im).float().permute(2, 0, 1).unsqueeze(0)
@@ -21,6 +22,17 @@ class PrDiMPTracker:
         sz = [settings.image_sample_size, settings.image_sample_size]
         self.img_sample_sz = torch.Tensor(sz)
         self.img_support_sz = self.img_sample_sz
+        # search_area = torch.prod(self.target_sz * settings.search_area_scale).item()
+        # self.target_scale =  math.sqrt(search_area) / self.img_sample_sz.prod().sqrt()
+        # self.base_target_sz = self.target_sz / self.target_scale
+        # if not hasattr(settings, 'scale_factors'):
+        #     settings.scale_factors = torch.ones(1)
+        # self.min_scale_factor = torch.max(10 / self.base_target_sz)
+        # self.max_scale_factor = torch.min(self.image_sz / self.base_target_sz)
+    
+    def initialize(self, im, seq):
+        self.pos = torch.Tensor(seq["init_pos"])
+        self.target_sz = torch.Tensor(seq["init_sz"])
         search_area = torch.prod(self.target_sz * settings.search_area_scale).item()
         self.target_scale =  math.sqrt(search_area) / self.img_sample_sz.prod().sqrt()
         self.base_target_sz = self.target_sz / self.target_scale
@@ -28,8 +40,7 @@ class PrDiMPTracker:
             settings.scale_factors = torch.ones(1)
         self.min_scale_factor = torch.max(10 / self.base_target_sz)
         self.max_scale_factor = torch.min(self.image_sz / self.base_target_sz)
-    
-    def initialize(self, im):
+
         tic = time.time()
 
         im = torch.from_numpy(im).float().permute(2, 0, 1).unsqueeze(0)
@@ -41,7 +52,7 @@ class PrDiMPTracker:
         out = {'time': time.time() - tic}
         return out
 
-    def track(self, image, info: dict = None) -> dict:
+    def track(self, image, info: dict=None) -> dict:
         self.debug_info = {}
 
         self.frame_num += 1
@@ -109,7 +120,7 @@ class PrDiMPTracker:
         self.debug_info['max_score'] = max_score
 
         # Compute output bounding box
-        new_state = torch.cat((self.pos[[1,0]] - (self.target_sz[[1,0]]-1)/2, self.target_sz[[1,0]]))
+        new_state = torch.cat((self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2, self.target_sz[[1,0]]))
 
         if getattr(settings, 'output_not_found_box', False) and flag == 'not_found':
             output_state = [-1, -1, -1, -1]
@@ -117,7 +128,7 @@ class PrDiMPTracker:
             output_state = new_state.tolist()
 
         out = {'target_bbox': output_state}
-        return out
+        return out, [new_state.tolist(), score_map.cpu().data.numpy(), test_x, scale_ind, sample_pos, sample_scales, flag, s]
 
     def get_centered_sample_pos(self):
         return self.pos + ((self.feature_sz + self.kernel_size) % 2) * self.target_scale * \
