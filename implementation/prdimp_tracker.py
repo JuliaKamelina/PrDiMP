@@ -13,22 +13,12 @@ from .utils import TensorList, plot_graph
 class PrDiMPTracker:
     def __init__(self, image_sz, net_path, is_color=True):
         self.is_color_image = is_color
-        # self.pos = torch.Tensor(seq["init_pos"])
-        # self.target_sz = torch.Tensor(seq["init_sz"])
         self.frame_num = 1
         self.features = PrDiMPFeatures(is_color, net_path, settings.device)
-        # im = torch.from_numpy(im).float().permute(2, 0, 1).unsqueeze(0)
         self.image_sz = torch.Tensor(image_sz)
         sz = [settings.image_sample_size, settings.image_sample_size]
         self.img_sample_sz = torch.Tensor(sz)
         self.img_support_sz = self.img_sample_sz
-        # search_area = torch.prod(self.target_sz * settings.search_area_scale).item()
-        # self.target_scale =  math.sqrt(search_area) / self.img_sample_sz.prod().sqrt()
-        # self.base_target_sz = self.target_sz / self.target_scale
-        # if not hasattr(settings, 'scale_factors'):
-        #     settings.scale_factors = torch.ones(1)
-        # self.min_scale_factor = torch.max(10 / self.base_target_sz)
-        # self.max_scale_factor = torch.min(self.image_sz / self.base_target_sz)
     
     def initialize(self, im, seq):
         self.pos = torch.Tensor(seq["init_pos"])

@@ -1,16 +1,26 @@
 import numpy as np
 import os.path
 
-def load_video_info(path):
-    gt_path = path #"/".join(path.split("/")[:-2])
-    gt_path = "{}/groundtruth_rect.txt".format(gt_path)
+
+def get_groundtruth(gt_path, mode='otb'):
     try:
         ground_truth = np.loadtxt(gt_path)
     except:
         ground_truth = np.loadtxt(gt_path, delimiter=",")
 
+    if mode == 'otb':
+        return ground_truth
+    if mode == 'tlp':
+        return ground_truth[..., 1:-1]
+
+def load_video_info(path, mode='otb'):
+    gt_path = path #"/".join(path.split("/")[:-2])
+    gt_path = "{}/groundtruth_rect.txt".format(gt_path)
+    
+    ground_truth = get_groundtruth(gt_path, mode)
+
     seq = dict()
-    seq["format"] = "otb"
+    seq["format"] = mode
     seq["len"] = len(ground_truth)
     seq["init_rect"] = ground_truth[0]
 
@@ -47,16 +57,14 @@ def load_video_info(path):
     seq["image_files"] = img_files
     return(seq, ground_truth)
 
-def load_video_info_test(path):
+def load_video_info_test(path, mode='otb'):
     gt_path = "/".join(path.split("/")[:-2])
     gt_path = "{}/groundtruth_rect.txt".format(gt_path)
-    try:
-        ground_truth = np.loadtxt(gt_path)
-    except:
-        ground_truth = np.loadtxt(gt_path, delimiter=",")
+
+    ground_truth = get_groundtruth(gt_path, mode)
 
     seq = dict()
-    seq["format"] = "otb"
+    seq["format"] = mode
     seq["len"] = len(ground_truth)
     seq["init_rect"] = ground_truth[0]
 

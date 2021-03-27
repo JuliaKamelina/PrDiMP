@@ -28,9 +28,6 @@ class PrDiMPMUTracker(PrDiMPTracker):
         self.mu_model_dir = mu_model_dir
         self.metric_model_path = metric_model_path
 
-        # init_gt = [*(self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2), *self.target_sz[[1,0]]]
-        # self.last_gt = [init_gt[1], init_gt[0], init_gt[1] + init_gt[3], init_gt[0] + init_gt[2]]  # ymin xmin ymax xmax
-
     def initializing(self, image, seq, reuse=False):
         out = self.initialize(image, seq)
         init_gt = [*(self.pos[[1,0]] - (self.target_sz[[1,0]] - 1)/2), *self.target_sz[[1,0]]]
