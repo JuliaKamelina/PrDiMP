@@ -1,6 +1,6 @@
 import numpy as np
 
-class PrDiMPParams:
+class PrDiMPMUParams:
     device = 'cuda'
     debug = True
     image_sample_size = 22*16
