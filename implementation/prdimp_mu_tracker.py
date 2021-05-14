@@ -7,7 +7,7 @@ import tensorflow as tf
 import torch
 import torch.nn.functional as F
 
-from .feature_extraction import PrDiMPFeatures, augmentation
+from .feature_extraction import augmentation
 from .localization import localize_target, refine_target_box
 from .prdimp_tracker import PrDiMPTracker
 from .runfiles import settings
@@ -108,9 +108,8 @@ class PrDiMPMUTracker(PrDiMPTracker):
             map_input = np.reshape(map_input, [tcopts['time_steps'], 1, 19, 19])
             map_input = map_input.transpose((0, 2, 3, 1))
             X_input = np.concatenate((state_tc, rv, dis), axis=1)
-            logits = self.sess.run(self.logits,
-                                               feed_dict={self.X_input: np.expand_dims(X_input, axis=0),
-                                                          self.maps: map_input})
+            logits = self.sess.run(self.logits, feed_dict={self.X_input: np.expand_dims(X_input, axis=0),
+                                                           self.maps: map_input})
             update = logits[0][0] < logits[0][1]
 
         hard_negative = (flag == 'hard_negative')
